@@ -1,0 +1,61 @@
+<!doctype html>
+<meta charset="utf-8">
+<script src="build/build.js"></script>
+<script>
+    var Collection = require('karlbohlmark-observable-collection/index.js');
+    var model = require('models')
+        .collection(Collection);
+    
+    function Company () {
+    
+    }
+    
+    var schema = {
+        "type": "object",
+        "id": "User",
+        "properties": {
+            "firstname": { 
+                "type":"string"
+            },
+            "email": { 
+                "type":"string"
+            },
+            "employer": {
+                "type": { "$ref": "Company" }
+            }
+        }
+    };
+
+    var companySchema = {
+        "type": "object",
+        "properties": {}
+    }
+
+    var Company = model('Company', companySchema );
+
+    var User = model('User')
+    .attr('firstname')
+    .attr('email')
+    .attr('employer', Company);
+
+    User.on('construct', function (instance) {
+
+    });
+
+    var user = new User({
+        firstname: 'John',
+        employer: {
+
+        }
+    })
+
+    ;
+    user.on('change firstname', function (val) {
+        console.log(val);
+    });
+    user.on('change', function () {
+        console.log('change');
+    })
+    user.firstname = 'Karl';
+    
+</script>

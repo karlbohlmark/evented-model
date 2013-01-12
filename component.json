@@ -1,0 +1,16 @@
+{
+  "name": "models",
+  "repo": "karlbohlmark/models",
+  "description": "models",
+  "version": "0.0.1",
+  "keywords": [],
+  "dependencies": {
+    "component/emitter": "*",
+    "karlbohlmark/observable-collection": "*"
+  },
+  "development": {},
+  "license": "MIT",
+  "scripts": [
+    "index.js"
+  ]
+}
