@@ -1,6 +1,6 @@
 {
-  "name": "models",
-  "repo": "karlbohlmark/models",
+  "name": "evented-model",
+  "repo": "karlbohlmark/evented-model",
   "description": "models",
   "version": "0.0.1",
   "keywords": [],
