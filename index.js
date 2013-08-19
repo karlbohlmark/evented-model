@@ -15,7 +15,7 @@ function createModel(name, schema) {
 				get: function () { return value; },
 				set: function (v) {
 					value = v;
-					this.emit('change ' + prop, v);
+					obj.emit('change ' + prop, v);
 				}
 			});
 		});
