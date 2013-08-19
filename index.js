@@ -54,8 +54,16 @@ function createModel(name, schema) {
 	};
 
 	Model.attr = function (name, schema) {
-		if (schema && (schema.prototype instanceof ModelBase)) {
-			schema = schema.prototype.schema;
+		schema = unwrapSchema(schema)
+
+		if (Array.isArray(schema)) {
+			var subSchema = unwrapSchema(schema.pop());
+
+			schema = {
+				id: name,
+				type: 'array',
+				items: subSchema
+			}
 		}
 
 		this.prototype.schema.properties[name] = schema || {};
@@ -80,6 +88,13 @@ function setFn(instance) {
 			instance[property]( getValue(instance.schema.properties[property], attrs[property]) );
 		});
 	};
+}
+
+function unwrapSchema(schema) {
+	if (schema && (schema.prototype instanceof ModelBase)) {
+		schema = schema.prototype.schema;
+	}
+	return schema;
 }
 
 function getValue(propertySchema, value) {
