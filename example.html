@@ -3,12 +3,8 @@
 <script src="build/build.js"></script>
 <script>
     var Collection = require('karlbohlmark-observable-collection/index.js');
-    var model = require('models')
+    var model = require('evented-model')
         .collection(Collection);
-    
-    function Company () {
-    
-    }
     
     var schema = {
         "type": "object",
@@ -38,6 +34,10 @@
     .attr('email')
     .attr('employer', Company);
 
+    User.prototype.introduce = function () {
+        console.log('My name is', this.firstname)
+    }
+
     User.on('construct', function (instance) {
 
     });
@@ -51,11 +51,9 @@
 
     ;
     user.on('change firstname', function (val) {
-        console.log(val);
+        this.introduce()
     });
-    user.on('change', function () {
-        console.log('change');
-    })
+
     user.firstname = 'Karl';
     
 </script>
