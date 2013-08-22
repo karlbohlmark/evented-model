@@ -157,6 +157,10 @@ function getValue(propertySchema, value) {
             if (!propertySchema.properties) {
                 return value;
             } else {
+                if (propertySchema.constructor == Object) {
+                    propertySchema.constructor = createModel(propertySchema.id || 'auto created', propertySchema)
+                }
+
                 if (propertySchema.constructor !== Object) {
                     return new propertySchema.constructor(value)
                 }
@@ -169,6 +173,9 @@ function getValue(propertySchema, value) {
             }
         },
         'string': function () {
+            return value;
+        },
+        'boolean': function () {
             return value;
         },
         'number': function () {
