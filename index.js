@@ -267,19 +267,29 @@ function patches (o, emitter) {
     }
 
     if (isArrayLike(o)) {
+        function watchItem (item, index) {
+            patches(item, emitter.namespaced(index.toString()))
+        }
+
+        function unwatchItem() {
+            console.warn('Implement unwatchItem!!!')
+        }
+
         if (o.on) {
             o.on('add', function (item, index) {
                 emitter.emit('add', index, unwrap(item))
+                watchItem(item, index)
             })
             o.on('remove', function (item, index) {
                 emitter.emit('remove', index, unwrap(item))
+                unwatchItem(item, index)
             })
             o.on('replace', function (index, oldItem, newItem) {
                 emitter.emit('replace', index, unwrap(newItem))
             })
         }
         o.forEach(function (item, index) {
-            patches(item, emitter.namespaced(index.toString()))
+            watchItem(item, index)
         })
     } else {
         if (!o.schema) return emitter;
