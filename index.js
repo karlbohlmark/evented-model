@@ -119,6 +119,16 @@ function createModel(name, schema) {
     return Model;
 }
 
+function traverseSchema (schema, cb) {
+    var props = schema.properties;
+    for (var i=0; i<props.length; i++) {
+        var subSchema = props[i]
+        traverseSchema(subSchema, cb)
+    }
+
+    cb(schema)
+}
+
 createModel.collection = function (Collection) {
     collectionConstructor = Collection;
     return this;
@@ -212,7 +222,7 @@ function reporter(inner, namespace) {
     if (!inner) {
         var handlers = []
         inner = handlers.push.bind(handlers)
-        inner.emit = argmap(function (op, path, val) {
+        inner.emit = argmap(function (op, path, val, from) {
             var patch = {
                 op: op,
                 path: path
@@ -223,6 +233,9 @@ function reporter(inner, namespace) {
                 case 'replace':
                 case 'add':
                     patch.value = val
+                    break;
+                case 'move':
+                    patch.from = from
                     break;
                 default:
                     throw new Error('Dont recognize op', op)
@@ -235,8 +248,8 @@ function reporter(inner, namespace) {
         inner(h)
     }
 
-    observe.emit = function (op, path, val) {
-        inner.emit(op, namespace + path, val)
+    observe.emit = function (op, path, val, from) {
+        inner.emit(op, namespace + path, val, (from !==void 0) && (namespace + from))
     }
 
     observe.namespaced = function (n) {
@@ -286,6 +299,9 @@ function patches (o, emitter) {
             })
             o.on('replace', function (index, oldItem, newItem) {
                 emitter.emit('replace', index, unwrap(newItem))
+            })
+            o.on('move', function (fromIndex, toIndex, item) {
+                emitter.emit('move', toIndex, unwrap(item), fromIndex)
             })
         }
         o.forEach(function (item, index) {

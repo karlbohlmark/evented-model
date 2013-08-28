@@ -24,7 +24,11 @@
 
     var companySchema = {
         "type": "object",
-        "properties": {}
+        "properties": {
+            "name": {
+                "type": "string"
+            }
+        }
     }
 
     var Company = model('Company', companySchema );
@@ -32,28 +36,32 @@
     var User = model('User')
     .attr('firstname')
     .attr('email')
-    .attr('employer', Company);
+    .attr('employers', [Company]);
+
 
     User.prototype.introduce = function () {
         console.log('My name is', this.firstname)
     }
 
-    User.on('construct', function (instance) {
-
-    });
-
     var user = new User({
         firstname: 'John',
-        employer: {
-
-        }
+        employers: [{
+            "name": "Connecta"
+        }, {
+            "name": "Acme"
+        }]
     })
 
-    ;
+    user.changes()(function (change) {
+        console.log(change)
+    })
+
     user.on('change firstname', function (val) {
         this.introduce()
     });
 
     user.firstname = 'Karl';
+
+    user.employers.move(0, 1)
     
 </script>
