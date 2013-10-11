@@ -62,9 +62,20 @@ function createModel(name, schema) {
 
     Model.prototype.set = function (attrs) {
         var instance = this;
-        Object.keys(attrs).forEach(function (property) {
+        var initialProperties = Object.keys(attrs)
+        initialProperties.forEach(function (property) {
             instance[property] = getValue(instance.schema.properties[property], attrs[property]);
         });
+        
+        // Set defaults
+        Object.keys(instance.schema.properties).forEach(function (prop) {
+            if (initialProperties.indexOf(prop) == -1) {
+                var defaultValue = instance.schema.properties[prop]['default'];
+                if (typeof defaultValue !== 'undefined') {
+                    instance[prop] = JSON.parse(JSON.stringify(defaultValue));
+                }
+            }
+        })
     };
 
     Emitter(Model);
