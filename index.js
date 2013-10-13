@@ -43,6 +43,9 @@ ModelBase.prototype.toJSON = function () {
 
 function createModel(name, schema) {
     function Model(data) {
+        if (!(this instanceof Model)) {
+            return new Model(data);
+        }
         if (data) {
             this.set(data);
         } else {
