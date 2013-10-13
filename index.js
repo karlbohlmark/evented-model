@@ -43,7 +43,11 @@ ModelBase.prototype.toJSON = function () {
 
 function createModel(name, schema) {
     function Model(data) {
-        if (data) this.set(data);
+        if (data) {
+            this.set(data);
+        } else {
+            this.setDefaults();
+        }
         var obj = this;
         Object.keys(this.schema.properties).forEach(function (prop) {
             var value = obj[prop];
@@ -67,16 +71,21 @@ function createModel(name, schema) {
             instance[property] = getValue(instance.schema.properties[property], attrs[property]);
         });
         
-        // Set defaults
+        this.setDefaults(initialProperties)
+    };
+
+    Model.prototype.setDefaults = function (excludeProperties) {
+        var instance = this
+        excludeProperties = excludeProperties || []
         Object.keys(instance.schema.properties).forEach(function (prop) {
-            if (initialProperties.indexOf(prop) == -1) {
+            if (excludeProperties.indexOf(prop) == -1) {
                 var defaultValue = instance.schema.properties[prop]['default'];
                 if (typeof defaultValue !== 'undefined') {
                     instance[prop] = JSON.parse(JSON.stringify(defaultValue));
                 }
             }
         })
-    };
+    }
 
     Emitter(Model);
 
