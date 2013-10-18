@@ -16,28 +16,33 @@
             "email": { 
                 "type":"string"
             },
-            "employer": {
-                "type": { "$ref": "Company" }
+            "employers": {
+                "type": "array",
+                "items": { "$ref": "#/definitions/company" }
+            }
+        },
+        "definitions": {
+            "company": {
+                "id": "Company",
+                "type": "object",
+                "properties": {
+                    "name": {
+                        "type": "string"
+                    },
+                    "profit": {
+                        "type": "number",
+                        "default": 0
+                    }
+                }
             }
         }
     };
 
-    var companySchema = {
-        "type": "object",
-        "properties": {
-            "name": {
-                "type": "string"
-            }
-        }
-    }
+    var companySchema = schema.definitions.company
 
     var Company = model('Company', companySchema );
 
-    var User = model('User')
-    .attr('firstname')
-    .attr('email')
-    .attr('employers', [Company]);
-
+    var User = model('User', schema);
 
     User.prototype.introduce = function () {
         console.log('My name is', this.firstname)
@@ -63,5 +68,7 @@
     user.firstname = 'Karl';
 
     user.employers.move(0, 1)
-    
+    user.employers.at(0).profit = 7
+    user.employers.at(0).profit = 8
+
 </script>

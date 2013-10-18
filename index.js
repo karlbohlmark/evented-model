@@ -67,11 +67,13 @@ function createModel(name, schema) {
     Model.prototype = new ModelBase();
     Model.prototype.constructor = Model;
 
+    Model.prototype.getValue = getValue;
+
     Model.prototype.set = function (attrs) {
         var instance = this;
         var initialProperties = Object.keys(attrs)
         initialProperties.forEach(function (property) {
-            instance[property] = getValue(instance.schema.properties[property], attrs[property]);
+            instance[property] = instance.getValue(instance.schema.properties[property], attrs[property]);
         });
         
         this.setDefaults(initialProperties)
@@ -174,16 +176,21 @@ function unwrapSchema(schema) {
 }
 
 function getValue(propertySchema, value) {
+    var me = this
     if (typeof propertySchema == 'undefined') propertySchema = { type: 'string' };
 
-    if (propertySchema.type && propertySchema.type.$ref) {
-        return new constructors[propertySchema.type.$ref](value);
+    if (propertySchema.$ref) {
+        propertySchema = resolvePointer(this.schema, propertySchema.$ref)
+    }
+
+    if (propertySchema.hasOwnProperty(constructor)) {
+        return new propertySchema.constructor(value);
     }
 
     return ({
         'array': function () {
             return new collectionConstructor(value.map(function (item) {
-                return getValue(propertySchema.items, item);
+                return me.getValue(propertySchema.items, item);
             }));
         },
         'object': function () {
@@ -200,7 +207,7 @@ function getValue(propertySchema, value) {
 
                 var o = {};
                 Object.keys(propertySchema.properties).forEach(function (property){
-                    o[property] = getValue(propertySchema.properties[property], value[property]);
+                    o[property] = me.getValue(propertySchema.properties[property], value[property]);
                 });
                 return o;
             }
@@ -291,10 +298,22 @@ function multiplex (arr, context) {
 }
 
 function unwrap (o) {
-    if (typeof o == 'object' && o!== null) {
+    if (typeof o == 'object' && o!== null && typeof o.toJSON == 'function') {
         return o.toJSON()
     }
     return o
+}
+
+function resolvePointer(root, pointer) {
+    pointer = pointer.split('#').pop()
+    /* Currently only absolute pointers are allowed */
+    var parts = pointer.split('/').slice(1)
+
+    var ref = root
+    for(var i = 0; i<parts.length; i++) {
+        ref = ref[parts[i]]
+    }
+    return ref;
 }
 
 function patches (o, emitter) {
