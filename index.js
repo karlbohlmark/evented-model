@@ -62,7 +62,9 @@ function createModel(name, schema, rootSchema) {
         Object.keys(this.schema.properties).forEach(function (prop) {
             var value = obj[prop];
             Object.defineProperty(obj, prop, {
-                get: function () { return value; },
+                get: function () {
+                    return value;
+                },
                 set: function (v) {
                     value = v;
                     obj.emit('change ' + prop, v);
@@ -78,7 +80,14 @@ function createModel(name, schema, rootSchema) {
         var instance = this;
         var initialProperties = Object.keys(attrs)
         initialProperties.forEach(function (property) {
-            instance[property] = instance.getValue(instance.schema.properties[property], attrs[property]);
+            var schema = instance.schema.properties[property]
+            var val = instance.getValue(schema, attrs[property]);
+            if (schema && schema.type == 'array') {
+                if (instance[property] && instance[property].reset) {
+                    return instance[property].reset(val.models)    
+                }
+            }
+            instance[property] = val
         });
         
         this.setDefaults(initialProperties)
@@ -170,9 +179,10 @@ function createModel(name, schema, rootSchema) {
 
         return ({
             'array': function () {
-                return new collectionConstructor(value.map(function (item) {
+                var arr = value.map(function (item) {
                     return me.getValue(propertySchema.items, item);
-                }));
+                })
+                return new collectionConstructor(arr);
             },
             'object': function () {
                 if (!propertySchema.properties) {
