@@ -75,19 +75,21 @@ function createModel(name, schema, rootSchema) {
 
     Model.prototype = new ModelBase();
     Model.prototype.constructor = Model;
-
+    Model.prototype.setValue = function (schema, property, value) {
+        if (schema && schema.type == 'array') {
+            if (this[property] && this[property].reset) {
+                return this[property].reset(value.models)
+            }
+        }
+        this[property] = value
+    }
     Model.prototype.set = function (attrs) {
         var instance = this;
         var initialProperties = Object.keys(attrs)
         initialProperties.forEach(function (property) {
             var schema = instance.schema.properties[property]
             var val = instance.getValue(schema, attrs[property]);
-            if (schema && schema.type == 'array') {
-                if (instance[property] && instance[property].reset) {
-                    return instance[property].reset(val.models)    
-                }
-            }
-            instance[property] = val
+            instance.setValue(schema, property, val)
         });
         
         this.setDefaults(initialProperties)
@@ -102,7 +104,7 @@ function createModel(name, schema, rootSchema) {
                 if (typeof defaultValue !== 'undefined') {
                     defaultValue = JSON.parse(JSON.stringify(defaultValue));
                     defaultValue = instance.getValue(instance.schema.properties[prop], defaultValue)
-                    instance[prop] = defaultValue
+                    instance.setValue(instance.schema.properties[prop], prop, defaultValue)
                 }
             }
         })
