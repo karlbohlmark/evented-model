@@ -41,13 +41,20 @@ ModelBase.prototype.toJSON = function () {
     return obj
 }
 
-function createModel(name, schema) {
+function createModel(name, schema, rootSchema) {
     function Model(data) {
         if (!(this instanceof Model)) {
             return new Model(data);
         }
         if (data) {
-            this.set(data);
+            if (typeof data == 'string' || typeof data == 'number') {
+                this.id = data
+                if (typeof this.load == 'function') {
+                    this.load()
+                }
+            } else {
+                this.set(data);
+            }
         } else {
             this.setDefaults();
         }
@@ -67,8 +74,6 @@ function createModel(name, schema) {
     Model.prototype = new ModelBase();
     Model.prototype.constructor = Model;
 
-    Model.prototype.getValue = getValue;
-
     Model.prototype.set = function (attrs) {
         var instance = this;
         var initialProperties = Object.keys(attrs)
@@ -86,7 +91,9 @@ function createModel(name, schema) {
             if (excludeProperties.indexOf(prop) == -1) {
                 var defaultValue = instance.schema.properties[prop]['default'];
                 if (typeof defaultValue !== 'undefined') {
-                    instance[prop] = JSON.parse(JSON.stringify(defaultValue));
+                    defaultValue = JSON.parse(JSON.stringify(defaultValue));
+                    defaultValue = instance.getValue(instance.schema.properties[prop], defaultValue)
+                    instance[prop] = defaultValue
                 }
             }
         })
@@ -137,21 +144,88 @@ function createModel(name, schema) {
     };
 
     if (schema) {
+        traverseSchema(schema, function (subSchema, parent, property, rootSchema) {
+            if (subSchema.$ref) {
+                var referencedSchema = resolvePointer(rootSchema, subSchema.$ref)
+                Object.defineProperty(parent, property, {
+                    get: function () { return referencedSchema; }
+                })
+            }
+        }, rootSchema)
         Model.prototype.schema = schema;
     }
     Model.prototype.schema.constructor = Model
 
+    Model.prototype.getValue = function(propertySchema, value) {
+        var me = this
+        if (typeof propertySchema == 'undefined') propertySchema = { type: 'string' };
+
+        if (propertySchema.$ref) {
+            propertySchema = resolvePointer(this.schema, propertySchema.$ref)
+        }
+
+        if (propertySchema.hasOwnProperty(constructor)) {
+            return new propertySchema.constructor(value);
+        }
+
+        return ({
+            'array': function () {
+                return new collectionConstructor(value.map(function (item) {
+                    return me.getValue(propertySchema.items, item);
+                }));
+            },
+            'object': function () {
+                if (!propertySchema.properties) {
+                    return value;
+                } else {
+                    if (propertySchema.constructor == Object) {
+                        propertySchema.constructor = createModel(propertySchema.id || 'auto created', propertySchema, rootSchema)
+                    }
+
+                    if (propertySchema.constructor !== Object) {
+                        return new propertySchema.constructor(value)
+                    }
+
+                    var o = {};
+                    Object.keys(propertySchema.properties).forEach(function (property){
+                        o[property] = me.getValue(propertySchema.properties[property], value[property]);
+                    });
+                    return o;
+                }
+            },
+            'string': function () {
+                return value;
+            },
+            'boolean': function () {
+                return value;
+            },
+            'number': function () {
+                return value;
+            }
+        })[propertySchema.type || 'string']();
+    }
+
+
     return Model;
 }
 
-function traverseSchema (schema, cb) {
-    var props = schema.properties;
-    for (var i=0; i<props.length; i++) {
-        var subSchema = props[i]
-        traverseSchema(subSchema, cb)
+function traverseSchema (schema, cb, root, parent, property) {
+    root = root || schema
+    
+    if (schema.properties){
+        var props = Object.keys(schema.properties);
+        for (var i=0; i<props.length; i++) {
+            var p = props[i]
+            var subSchema = schema.properties[p];
+            traverseSchema(subSchema, cb, root, schema.properties, p)
+        }
     }
 
-    cb(schema)
+    if (schema.items) {
+        traverseSchema(schema.items, cb, root, schema, 'items')
+    }
+
+    cb(schema, parent, property, root)
 }
 
 createModel.collection = function (Collection) {
@@ -175,54 +249,6 @@ function unwrapSchema(schema) {
     return schema;
 }
 
-function getValue(propertySchema, value) {
-    var me = this
-    if (typeof propertySchema == 'undefined') propertySchema = { type: 'string' };
-
-    if (propertySchema.$ref) {
-        propertySchema = resolvePointer(this.schema, propertySchema.$ref)
-    }
-
-    if (propertySchema.hasOwnProperty(constructor)) {
-        return new propertySchema.constructor(value);
-    }
-
-    return ({
-        'array': function () {
-            return new collectionConstructor(value.map(function (item) {
-                return me.getValue(propertySchema.items, item);
-            }));
-        },
-        'object': function () {
-            if (!propertySchema.properties) {
-                return value;
-            } else {
-                if (propertySchema.constructor == Object) {
-                    propertySchema.constructor = createModel(propertySchema.id || 'auto created', propertySchema)
-                }
-
-                if (propertySchema.constructor !== Object) {
-                    return new propertySchema.constructor(value)
-                }
-
-                var o = {};
-                Object.keys(propertySchema.properties).forEach(function (property){
-                    o[property] = me.getValue(propertySchema.properties[property], value[property]);
-                });
-                return o;
-            }
-        },
-        'string': function () {
-            return value;
-        },
-        'boolean': function () {
-            return value;
-        },
-        'number': function () {
-            return value;
-        }
-    })[propertySchema.type || 'string']();
-}
 
 
 function isArrayLike (o) {
