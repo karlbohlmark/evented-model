@@ -6,7 +6,7 @@
   "keywords": [],
   "dependencies": {
     "component/emitter": "*",
-    "karlbohlmark/observable-collection": "*"
+    "karlbohlmark/observable-collection": "0.0.2"
   },
   "development": {},
   "license": "MIT",
