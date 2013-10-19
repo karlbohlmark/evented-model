@@ -2,7 +2,7 @@
   "name": "evented-model",
   "repo": "karlbohlmark/evented-model",
   "description": "models",
-  "version": "0.0.1",
+  "version": "0.0.2",
   "keywords": [],
   "dependencies": {
     "component/emitter": "*",
@@ -12,5 +12,6 @@
   "license": "MIT",
   "scripts": [
     "index.js"
-  ]
+  ],
+  "remotes": []
 }
