@@ -66,8 +66,9 @@ function createModel(name, schema, rootSchema) {
                     return value;
                 },
                 set: function (v) {
+                    var oldValue = value;
                     value = v;
-                    obj.emit('change ' + prop, v);
+                    obj.emit('change ' + prop, v, oldValue);
                 }
             });
         });
