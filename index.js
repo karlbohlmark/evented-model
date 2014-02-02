@@ -422,7 +422,8 @@ function patches (o, emitter) {
         keys.forEach(function (key) {
             if (o.on) {
                 o.on('change ' + key, function (newVal) {
-                    emitter.emit('replace', key, unwrap(newVal))
+                    var op = typeof o[key] != 'undefined' ? 'replace' : 'add';
+                    emitter.emit(op, key, unwrap(newVal))
                 })
             } else {
                 //console.log('not watching', key, o)
