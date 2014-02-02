@@ -46,6 +46,7 @@ function createModel(name, schema, rootSchema) {
         if (!(this instanceof Model)) {
             return new Model(data);
         }
+        Model.emit('construct', this, data)
         if (data) {
             if (typeof data == 'string' || typeof data == 'number') {
                 this.id = data
@@ -72,6 +73,7 @@ function createModel(name, schema, rootSchema) {
                 }
             });
         });
+        Model.emit('constructed', this)
     }
 
     Model.prototype = new ModelBase();
@@ -131,6 +133,10 @@ function createModel(name, schema, rootSchema) {
 
     Model.prototype.changes = function () {
         return patches(this)
+    }
+
+    Model.prototype.patches = function () {
+        return modelPatchSource(this);
     }
 
     Model.schema = function (schema) {
@@ -353,6 +359,25 @@ function resolvePointer(root, pointer) {
         ref = ref[parts[i]]
     }
     return ref;
+}
+
+function  modelPatchSource(model) {
+    var callbacks = [];
+    model.changes()(produce);
+
+    function produce(change) {
+        callbacks.forEach(function (cb) {
+            cb(null, change);
+        })
+
+    }
+
+    return function modelPatch(close, callback) {
+        if (close) {
+            return callbacks.splice(callbacks.indexOf(callback), 1);    
+        }
+        callbacks.push(callback);
+    }
 }
 
 function patches (o, emitter) {
