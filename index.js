@@ -421,8 +421,8 @@ function patches (o, emitter) {
 
         keys.forEach(function (key) {
             if (o.on) {
-                o.on('change ' + key, function (newVal) {
-                    var op = typeof o[key] != 'undefined' ? 'replace' : 'add';
+                o.on('change ' + key, function (newVal, oldVal) {
+                    var op = typeof oldVal == 'undefined' ? 'add' : 'replace';
                     emitter.emit(op, key, unwrap(newVal))
                 })
             } else {
