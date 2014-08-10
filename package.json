@@ -1,10 +1,10 @@
 {
   "name": "evented-model",
-  "version": "0.0.0",
+  "version": "0.0.1",
   "description": "models",
   "main": "index.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "component run test.js"
   },
   "repository": {
     "type": "git",
@@ -14,5 +14,9 @@
   "license": "BSD",
   "bugs": {
     "url": "https://github.com/karlbohlmark/evented-model/issues"
+  },
+  "devDependencies": {
+    "component": "~0.17.0",
+    "component-run": "*"
   }
 }
