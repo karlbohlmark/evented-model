@@ -2,7 +2,7 @@
   "name": "evented-model",
   "repo": "karlbohlmark/evented-model",
   "description": "models",
-  "version": "0.0.2",
+  "version": "0.0.4",
   "keywords": [],
   "dependencies": {
     "component/emitter": "*",
