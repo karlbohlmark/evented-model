@@ -93,7 +93,6 @@ function createModel(name, schema, rootSchema) {
         initialProperties.forEach(function (property) {
             var schema = instance.schema.properties[property]
             var val = instance.getValue(schema, attrs[property]);
-            console.log(property, val)
             instance.setValue(schema, property, val)
         });
         
@@ -166,7 +165,6 @@ function createModel(name, schema, rootSchema) {
     if (schema) {
         traverseSchema(schema, function (subSchema, parent, property, rootSchema) {
             if (subSchema.$ref) {
-                console.log("RESOLVE", rootSchema, subSchema.$ref)
                 var referencedSchema = resolvePointer(rootSchema, subSchema.$ref)
                 Object.defineProperty(parent, property, {
                     get: function () { return referencedSchema; }
@@ -191,15 +189,12 @@ function createModel(name, schema, rootSchema) {
 
         return ({
             'array': function () {
-                console.log("ARR TYPE::::", value.constructor.name)
                 var arr = value.map(function (item) {
-                    console.log(propertySchema, ">>>>>>>>>>>")
                     return me.getValue(propertySchema.items, item);
                 })
                 return new collectionConstructor(arr);
             },
             'object': function () {
-                console.log("OOOOO prop", propertySchema)
                 if (!propertySchema.properties) {
                     return value;
                 } else {
@@ -259,7 +254,6 @@ createModel.collection = function (Collection) {
 };
 
 function setFn(instance) {
-    console.log("INSTANCE", instance)
     return function (attrs) {
         Object.keys(attrs).forEach(function (property) {
             instance[property]( getValue(instance.schema.properties[property], attrs[property]) );
@@ -357,12 +351,9 @@ function unwrap (o) {
 }
 
 function resolvePointer(root, pointer) {
-    console.log("resolve pointer", root, pointer)
     pointer = pointer.split('#').pop()
-    console.log("pointer", pointer)
     /* Currently only absolute pointers are allowed */
     var parts = pointer.split('/').slice(1)
-    console.log("parts", parts)
     var ref = root
     for(var i = 0; i<parts.length; i++) {
         ref = ref[parts[i]]

@@ -12,6 +12,5 @@
   "license": "MIT",
   "scripts": [
     "index.js"
-  ],
-  "remotes": []
+  ]
 }
