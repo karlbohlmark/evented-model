@@ -1,10 +1,14 @@
 {
-  "name": "evented-model",
+  "name": "@karboh/evented-model",
   "version": "0.0.5",
   "description": "models",
   "main": "index.js",
   "scripts": {
     "test": "component run test.js"
+  },
+  "dependencies": {
+	 "component-emitter": "*",
+    "@karboh/observable-collection": "*"
   },
   "repository": {
     "type": "git",
